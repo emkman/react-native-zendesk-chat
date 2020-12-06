@@ -97,6 +97,11 @@ declare module "react-native-zendesk-chat" {
 		 * Configure the token to start receiving Push Notifications
 		 */
 		registerPushToken: (token: string) => void;
+
+		/**
+		 * Set the JWT token to authenticate user with Zendesk
+		 */
+		authenticateWithToken: (token: string) => void;
 	}
 
 	const RNZendeskChatModule: RNZendeskChatModuleImpl;
