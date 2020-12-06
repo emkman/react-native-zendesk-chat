@@ -7,6 +7,7 @@
 
 
 #import "RNZendeskChatModule.h"
+#import "ZDKJWTAuth.h"
 
 #import <React/RCTUtils.h>
 #import <React/RCTConvert.h>
@@ -198,6 +199,14 @@ RCT_EXPORT_METHOD(_initWith2Args:(NSString *)zenDeskKey appId:(NSString *)appId)
 RCT_EXPORT_METHOD(registerPushToken:(NSString *)token) {
 	dispatch_sync(dispatch_get_main_queue(), ^{
 		[ZDKChat registerPushToken:[RCTConvert NSData:token]];
+	});
+}
+
+RCT_EXPORT_METHOD(authenticateWithToken:(NSString *)token) {
+	dispatch_sync(dispatch_get_main_queue(), ^{
+        ZDKJWTAuth *authenticator = [ZDKJWTAuth new];
+        [authenticator setToken:token];
+        [ZDKChat.instance setIdentityWithAuthenticator:authenticator];
 	});
 }
 
