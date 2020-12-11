@@ -85,7 +85,7 @@ declare module "react-native-zendesk-chat" {
 		/**
 		 * Presents the Zendesk Chat User Interface
 		 */
-		startChat: (options: StartChatOptions) => void;
+		startChat: (options: StartChatOptions, onDismiss?: VoidFunction) => void;
 		/**
 		 * Backwards Compatibility!
 		 * - You can pass all these parameters to RNZendeskChatModule.startChat

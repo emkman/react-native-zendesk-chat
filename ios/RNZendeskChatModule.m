@@ -38,6 +38,9 @@ RCT_ENUM_CONVERTER(ZDKFormFieldStatus,
 // Backwards compatibility with the unnecessary setVisitorInfo method
 ZDKChatAPIConfiguration *_visitorAPIConfig;
 
+typedef void (^VoidFunction)(void);
+VoidFunction g_onDismiss;
+
 
 RCT_EXPORT_MODULE(RNZendeskChatModule);
 
@@ -140,7 +143,7 @@ config.target = [RCTConvert BOOL: behaviorFlags[@"" #key] ?: @YES]
 	return config;
 }
 
-RCT_EXPORT_METHOD(startChat:(NSDictionary *)options) {
+RCT_EXPORT_METHOD(startChat:(NSDictionary *)options onDismiss:(RCTResponseSenderBlock)onDismiss) {
 	if (!options || ![options isKindOfClass: NSDictionary.class]) {
 		if (!!options){
 			NSLog(@"[RNZendeskChatModule] Invalid JS startChat Configuration Options -- expected a config hash");
@@ -174,10 +177,16 @@ RCT_EXPORT_METHOD(startChat:(NSDictionary *)options) {
 			return;
 		}
 
+		g_onDismiss = ^() {
+            if (!!onDismiss) {
+                onDismiss(@[]);
+            }
+        };
+
 		viewController.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle: options[@"localizedDismissButtonTitle"] ?: @"Close"
-																						   style: UIBarButtonItemStylePlain
-																						  target: self
-																						  action: @selector(dismissChatUI)];
+																				   style: UIBarButtonItemStylePlain
+																				   target: self
+																				   action: @selector(dismissChatUI)];
 
 		UINavigationController *chatController = [[UINavigationController alloc] initWithRootViewController: viewController];
 		[RCTPresentedViewController() presentViewController:chatController animated:YES completion:nil];
@@ -185,7 +194,7 @@ RCT_EXPORT_METHOD(startChat:(NSDictionary *)options) {
 }
 
 - (void) dismissChatUI {
-	[RCTPresentedViewController() dismissViewControllerAnimated:YES completion:nil];
+	[RCTPresentedViewController() dismissViewControllerAnimated:YES completion:g_onDismiss];
 }
 
 RCT_EXPORT_METHOD(_initWith2Args:(NSString *)zenDeskKey appId:(NSString *)appId) {
