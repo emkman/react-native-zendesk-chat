@@ -392,4 +392,13 @@ public class RNZendeskChatModule extends ReactContextBaseJavaModule {
             }
         });
     }
+
+    @ReactMethod
+    public void authenticateWithToken(final String token) {
+        Log.d(TAG, "Set Zendesk JWT Identity");
+        final ZDKJWTAuth identity = new ZDKJWTAuth();
+        identity.setToken(token);
+
+        Chat.INSTANCE.setIdentity(identity);
+    }
 }
