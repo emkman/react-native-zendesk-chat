@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.util.Log;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -296,8 +297,16 @@ public class RNZendeskChatModule extends ReactContextBaseJavaModule {
         return builder;
     }
 
+    // Unfortunately, react-native: android doesn't support the following
+    // - Java's Method Overloading
+    // - automatically providing null to undefined parameters (like iOS)
+    //
+    // As a result, we need to guarantee this is always called with 2 parameters from JS
+    //
+    // This method has been renamed to make that clear, and index.js is adding the
+    //  correct interface for startChat() at runtime
     @ReactMethod
-    public void startChat(ReadableMap options) {
+    public void _startChatWith2Args(ReadableMap options, Callback onDismiss) {
         if (Chat.INSTANCE.providers() == null) {
             Log.e(TAG,
                     "Zendesk Internals are undefined -- did you forget to call RNZendeskModule.init(<account_key>)?");
@@ -330,7 +339,7 @@ public class RNZendeskChatModule extends ReactContextBaseJavaModule {
                 getReadableMap(options, "messagingOptions", "startChat"), MessagingActivity.builder());
 
         if (needsToSetVisitorInfoAfterChatStart) {
-            setupChatStartObserverToSetVisitorInfo();
+            setupChatStartObserverToSetVisitorInfo(onDismiss);
         }
 
         Activity activity = getCurrentActivity();
@@ -351,7 +360,7 @@ public class RNZendeskChatModule extends ReactContextBaseJavaModule {
     }
 
     // https://support.zendesk.com/hc/en-us/articles/360055343673
-    public void setupChatStartObserverToSetVisitorInfo(){
+    public void setupChatStartObserverToSetVisitorInfo(final Callback onDismiss){
         // Create a temporary observation scope until the chat is started.
         observationScope = new ObservationScope();
         Chat.INSTANCE.providers().chatProvider().observeChatState(observationScope, new Observer<ChatState>() {
@@ -360,16 +369,22 @@ public class RNZendeskChatModule extends ReactContextBaseJavaModule {
                 ChatSessionStatus chatStatus = chatState.getChatSessionStatus();
                 // Status achieved after the PreChatForm is completed
                 if (chatStatus == ChatSessionStatus.STARTED) {
-                    observationScope.cancel(); // Once the chat is started disable the observation
-                    observationScope = null; // Clean things up to avoid confusion.
                     if (pendingVisitorInfo == null) { return; }
-
                     // Update the information MID chat here. All info but Department can be updated
                     // Add here the code to set the selected visitor info *after* the preChatForm is complete
                     _setVisitorInfo(pendingVisitorInfo);
                     pendingVisitorInfo = null;
 
                     Log.d(TAG, "Set the VisitorInfo after chat start");
+                } else if (chatStatus == ChatSessionStatus.ENDING) {
+                    if (onDismiss == null) {
+                        Log.d(TAG, "No onDismiss handler defined");
+                    } else {
+                        observationScope.cancel(); // Once the chat is ending, disable the observation
+                        observationScope = null; // Clean things up to avoid confusion.
+
+                        onDismiss.invoke();
+                    }
                 } else {
                     // There are few other statuses that you can observe but they are unused in this example
                     Log.d(TAG, "[observerSetup] - ChatSessionUpdate -> (unused) status : " + chatStatus.toString());

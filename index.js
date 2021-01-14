@@ -11,6 +11,10 @@ RNZendeskChatModule.init = (key, appId) => {
 	return RNZendeskChatModule._initWith2Args(key, appId || null);
 };
 
+RNZendeskChatModule.startChat = (options, onDismiss) => {
+	RNZendeskChatModule._startChatWith2Args(options, onDismiss || null);
+};
+
 /**
  * TypeScript Documentation for this Module describes the available methods & parameters
  *

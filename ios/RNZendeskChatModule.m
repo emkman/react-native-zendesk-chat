@@ -143,7 +143,7 @@ config.target = [RCTConvert BOOL: behaviorFlags[@"" #key] ?: @YES]
 	return config;
 }
 
-RCT_EXPORT_METHOD(startChat:(NSDictionary *)options onDismiss:(RCTResponseSenderBlock)onDismiss) {
+RCT_EXPORT_METHOD(_startChatWith2Args:(NSDictionary *)options onDismiss:(RCTResponseSenderBlock)onDismiss) {
 	if (!options || ![options isKindOfClass: NSDictionary.class]) {
 		if (!!options){
 			NSLog(@"[RNZendeskChatModule] Invalid JS startChat Configuration Options -- expected a config hash");
